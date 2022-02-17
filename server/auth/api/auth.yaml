@@ -1,0 +1,10 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: auth.v1.AuthService.Login
+      post: /v1/auth/login
+      body: "*"
+    - selector: auth.v1.AuthService.Ping
+      get: /v1/auth/ping

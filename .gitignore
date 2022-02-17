@@ -1,0 +1,7 @@
+.vscode
+__debug_bin.exe
+
+logs/
+gen/
+
+go.sum
