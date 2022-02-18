@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"log"
 	"net"
 
 	"go.uber.org/zap"
@@ -10,38 +8,30 @@ import (
 
 	authpb "gService/auth/api/gen/v1"
 	"gService/auth/auth"
+	sharelog "gService/share/log"
 )
 
 // PORT is the port to listen on.
 const PORT string = ":9001"
 
-func filter(ctx context.Context,
-	req interface{}, info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (resp interface{}, err error) {
-	log.Println("fileter:", info)
-	return handler(ctx, req)
-}
+// Logger is the global logger.
+var Logger *zap.Logger
 
 func main() {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-
+	Logger := sharelog.InitZapLog("auth")
 	lis, err := net.Listen("tcp", PORT)
 	if err != nil {
-		logger.Fatal("failed to listen", zap.Error(err))
+		Logger.Fatal("failed to listen", zap.Error(err))
 	}
 
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(filter),
+		grpc.UnaryInterceptor(auth.UnaryInterceptorWithLog(Logger)),
 	)
 	authpb.RegisterAuthServiceServer(s, &auth.Service{
-		Logger: logger,
+		Logger: Logger,
 	})
 
-	logger.Info("starting auth service", zap.String("port", PORT))
+	Logger.Info("starting auth service", zap.String("port", PORT))
 	err = s.Serve(lis)
-	logger.Fatal("failed to serve", zap.Error(err))
+	Logger.Fatal("failed to serve", zap.Error(err))
 }
