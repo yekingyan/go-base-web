@@ -1,14 +1,11 @@
 package sharetrace
 
-import (
-	"fmt"
-	"time"
-)
+import "github.com/google/uuid"
 
 // XRequestIDKey is the request id key.
 const XRequestIDKey = "X-Request-ID"
 
 // NewRequestID create a request id.
 func NewRequestID() string {
-	return fmt.Sprintf("req-id-%d", time.Now().UnixNano())
+	return uuid.New().String()
 }

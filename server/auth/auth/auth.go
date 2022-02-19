@@ -5,24 +5,82 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	authpb "gService/auth/api/gen/v1"
+	"gService/auth/dao"
 	sharetrace "gService/share/trace"
 )
 
 // Service implements the proto.AuthServiceServer interface.
 type Service struct {
 	Logger *zap.Logger
+	Mongo  *dao.AuthMongo
 }
 
-// Login in auth service.
-func (s *Service) Login(context.Context, *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	s.Logger.Info("Login")
+// HashPassword turns a plaintext password into a hash.
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+// CheckPasswordHash checks if a password matches a hash.
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+// GetHashingCost returns the hashing cost used by bcrypt.
+func GetHashingCost(hashedPassword []byte) int {
+	cost, err := bcrypt.Cost(hashedPassword)
+	if err != nil {
+		panic(err)
+	}
+	return cost
+}
+
+// Register is a gRPC method.
+func (s *Service) Register(ctx context.Context, req *authpb.LoginRequest) (*authpb.RegisterResponse, error) {
+	hp, err := HashPassword(req.Password)
+	if err != nil {
+		s.Logger.Error("Register HashPassword", zap.Error(err))
+		return nil, status.Errorf(codes.Unavailable, "unvalid password")
+	}
+	ok, row, err := s.Mongo.CreateUser(req.Username, hp)
+	if !ok || err != nil {
+		s.Logger.Error("Register CreateUser", zap.Error(err))
+		return nil, status.Errorf(codes.AlreadyExists, "username already exists")
+	}
+
+	s.Logger.Info("Register success", zap.Any("row", row))
+	return &authpb.RegisterResponse{
+		UserId: row.ID,
+		Username: row.Username,
+	}, nil
+}
+
+// Login  is a gRPC method.
+func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
+	row, err := s.Mongo.GetUserByName(req.Username)
+	if err != nil {
+		s.Logger.Error("Login GetUserByName", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "")
+	}
+	if ok := CheckPasswordHash(req.Password, row.Password); !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "wrong password")
+	}
+
+	s.Logger.Sugar().Info("Login success", "user", row.ID, row.Username)
+	// TODO: create token
 	return &authpb.LoginResponse{
 		AccessToken: "access_token",
 		ExpiresIn:   3600,
+		UserId:      row.ID,
+		Username:    row.Username,
 	}, nil
 }
 

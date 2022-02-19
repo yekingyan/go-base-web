@@ -4,16 +4,26 @@ package auth.v1;
 option go_package = "coolcar/auth/api/gen/v1;authpb";
 
 message LoginRequest {
-    string code = 1;
+    string username = 1;
+    string password = 2;
 }
 
 message LoginResponse {
     // oauth2字段
     string access_token = 1;
     int32 expires_in = 2;
+
+    string user_id = 3;
+    string username = 4;
+}
+
+message RegisterResponse {
+    string user_id = 3;
+    string username = 4;
 }
 
 service AuthService {
+    rpc Register(LoginRequest) returns (RegisterResponse) {}
     rpc Login(LoginRequest) returns (LoginResponse) {}
     rpc Ping(LoginRequest) returns (LoginResponse) {}
 }
