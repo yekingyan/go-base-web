@@ -58,7 +58,7 @@ func (s *Service) Register(ctx context.Context, req *authpb.LoginRequest) (*auth
 
 	s.Logger.Info("Register success", zap.Any("row", row))
 	return &authpb.RegisterResponse{
-		UserId: row.ID,
+		UserId:   row.ID,
 		Username: row.Username,
 	}, nil
 }
@@ -67,8 +67,7 @@ func (s *Service) Register(ctx context.Context, req *authpb.LoginRequest) (*auth
 func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	row, err := s.Mongo.GetUserByName(req.Username)
 	if err != nil {
-		s.Logger.Error("Login GetUserByName", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "")
+		return nil, status.Errorf(codes.Unauthenticated, "")
 	}
 	if ok := CheckPasswordHash(req.Password, row.Password); !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "wrong password")
@@ -85,7 +84,7 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.
 }
 
 // Ping is a Server api test.
-func (s *Service) Ping(context.Context, *authpb.LoginRequest) (*authpb.LoginResponse, error) {
+func (s *Service) Ping(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	s.Logger.Info("ping")
 	return &authpb.LoginResponse{
 		AccessToken: "access_token ping",

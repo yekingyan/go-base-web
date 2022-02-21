@@ -47,7 +47,7 @@ func main() {
 
 	authpb.RegisterAuthServiceServer(s, &auth.Service{
 		Logger: Logger,
-		Mongo:  dao.NewMongo(mc.Database(DatabaseName)),
+		Mongo:  dao.NewMongo(mc.Database(DatabaseName), Logger),
 	})
 
 	Logger.Info("starting auth service", zap.String("port", PORT))

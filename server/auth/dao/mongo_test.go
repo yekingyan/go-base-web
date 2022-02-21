@@ -10,6 +10,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 )
 
 var mongoURI string
@@ -25,7 +26,8 @@ func TestRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to connect to mongo:", err)
 	}
-	m := NewMongo(mc.Database("gservice"))
+	logger, _ := zap.NewDevelopment()
+	m := NewMongo(mc.Database("gservice"), logger)
 
 	users := []*UserRow{
 		{
