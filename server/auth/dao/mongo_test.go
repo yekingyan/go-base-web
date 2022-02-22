@@ -15,8 +15,7 @@ import (
 
 var mongoURI string
 
-func TestRegister(t *testing.T) {
-	ctx := context.Background()
+func getAuthMongo(ctx context.Context, t *testing.T) *AuthMongo {
 	fmt.Println("mc:", mongoURI)
 	mc, err := mongo.Connect(
 		ctx,
@@ -28,6 +27,12 @@ func TestRegister(t *testing.T) {
 	}
 	logger, _ := zap.NewDevelopment()
 	m := NewMongo(mc.Database("gservice"), logger)
+	return m
+}
+
+func TestRegister(t *testing.T) {
+	ctx := context.Background()
+	m := getAuthMongo(ctx, t)
 
 	users := []*UserRow{
 		{
@@ -73,4 +78,23 @@ func TestMain(m *testing.M) {
 		return m.Run()
 	}()
 	os.Exit(code)
+}
+
+func TestGetUserByID(t *testing.T) {
+	ctx := context.Background()
+	m := getAuthMongo(ctx, t)
+	ok, u1, err := m.CreateUser("test1", "test1")
+	if u1 == (UserRow{}) {
+		t.Fatal("failed to create user:", err)
+	}
+	if !ok {
+		fmt.Println("use the old user")
+	}
+	u2, err := m.GetUserByID(u1.ID)
+	if err != nil {
+		t.Fatal("failed to get user:", err)
+	}
+	if u1 != u2 {
+		t.Error("user mismatch:", u1, u2)
+	}
 }

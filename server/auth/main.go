@@ -12,6 +12,7 @@ import (
 	authpb "gService/auth/api/gen/v1"
 	"gService/auth/auth"
 	"gService/auth/dao"
+	stoken "gService/auth/token"
 	sharelog "gService/share/log"
 )
 
@@ -26,6 +27,9 @@ const DatabaseName string = "gservice"
 
 // Logger is the global logger.
 var Logger *zap.Logger
+
+// TokenExpire is the token expire time.
+const TokenExpire int64 = 60 * 60 * 2
 
 func main() {
 	Logger := sharelog.InitZapLog("auth")
@@ -45,9 +49,15 @@ func main() {
 		Logger.Fatal("failed to connect to mongo:", zap.Error(err))
 	}
 
+	am := dao.NewMongo(mc.Database(DatabaseName), Logger)
 	authpb.RegisterAuthServiceServer(s, &auth.Service{
 		Logger: Logger,
-		Mongo:  dao.NewMongo(mc.Database(DatabaseName), Logger),
+		Mongo:  am,
+		Token: stoken.NewSessionToken(
+			TokenExpire,
+			am,
+			Logger,
+		),
 	})
 
 	Logger.Info("starting auth service", zap.String("port", PORT))
