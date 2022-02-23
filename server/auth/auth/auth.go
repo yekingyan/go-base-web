@@ -13,7 +13,6 @@ import (
 
 	authpb "gService/auth/api/gen/v1"
 	"gService/auth/dao"
-	stoken "gService/auth/token"
 	sharetrace "gService/share/trace"
 )
 
@@ -21,7 +20,13 @@ import (
 type Service struct {
 	Logger *zap.Logger
 	Mongo  *dao.AuthMongo
-	Token  *stoken.SessionToken
+	Token  TokenGenerator
+}
+
+// TokenGenerator is a token interface.
+type TokenGenerator interface {
+	GetExpiresIn() int64
+	GenerateToken(userID string) (string, int64, error)
 }
 
 // HashPassword turns a plaintext password into a hash.
@@ -75,15 +80,15 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.
 		return nil, status.Errorf(codes.Unauthenticated, "wrong password")
 	}
 
-	session, err := s.Token.CreateSession(row.ID)
+	sessionID, expire, err := s.Token.GenerateToken(row.ID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "")
 	}
 	s.Logger.Info("Login success", zap.Any("user_id", row.ID))
 	return &authpb.LoginResponse{
-		AccessToken: session.ID,
-		ExpiresIn:   int32(s.Token.Expire),
-		Expire:      session.ExpireTime,
+		AccessToken: sessionID,
+		ExpiresIn:   s.Token.GetExpiresIn(),
+		Expire:      expire,
 		UserId:      row.ID,
 		Username:    row.Username,
 	}, nil

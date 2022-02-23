@@ -11,7 +11,7 @@ message LoginRequest {
 message LoginResponse {
     // oauth2字段
     string access_token = 1;
-    int32 expires_in = 2;
+    int64 expires_in = 2;
 
     string user_id = 3;
     string username = 4;

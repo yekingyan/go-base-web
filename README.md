@@ -22,3 +22,10 @@ server>./genProto
 
 >mkdir -p .vscode
 >cp config/vscodeLaunch.json .vscode/launch.json
+
+## 四 密钥配置
+
+server> touch auth/private.key
+server> touch share/auth/public.key
+
+并填入密钥

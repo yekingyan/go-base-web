@@ -22,7 +22,13 @@ func NewSessionToken(expire int64, mongo *dao.AuthMongo, logger *zap.Logger) *Se
 	}
 }
 
-// CreateSession returns a session for userID
-func (s *SessionToken) CreateSession(userID string) (dao.SessionRow, error) {
-	return s.Mongo.CreateSession(userID, s.Expire)
+// GenerateToken returns a session for userID
+func (s *SessionToken) GenerateToken(userID string) (string, int64, error) {
+	row, err := s.Mongo.CreateSession(userID, s.Expire)
+	return row.ID, row.ExpireTime, err
+}
+
+// GetExpiresIn returns the expire time of the session
+func (s *SessionToken) GetExpiresIn() int64 {
+	return s.Expire
 }

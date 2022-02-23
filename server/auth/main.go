@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
+	"io/ioutil"
 	"net"
+	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -31,6 +36,28 @@ var Logger *zap.Logger
 // TokenExpire is the token expire time.
 const TokenExpire int64 = 60 * 60 * 2
 
+// PrivateKeyPath is the path of private key.
+const PrivateKeyPath = "auth/private.key"
+
+func getPk(logger *zap.Logger) *rsa.PrivateKey {
+	pkFile, err := os.Open(PrivateKeyPath)
+	if err != nil {
+		logger.Fatal("cannot open private key", zap.Error(err))
+		panic(err)
+	}
+	pkBytes, err := ioutil.ReadAll(pkFile)
+	if err != nil {
+		logger.Fatal("cannot read private key", zap.Error(err))
+		panic(err)
+	}
+	privKey, err := jwt.ParseRSAPrivateKeyFromPEM(pkBytes)
+	if err != nil {
+		logger.Fatal("cannot parse private key", zap.Error(err))
+		panic(err)
+	}
+	return privKey
+}
+
 func main() {
 	Logger := sharelog.InitZapLog("auth")
 	lis, err := net.Listen("tcp", PORT)
@@ -53,10 +80,10 @@ func main() {
 	authpb.RegisterAuthServiceServer(s, &auth.Service{
 		Logger: Logger,
 		Mongo:  am,
-		Token: stoken.NewSessionToken(
+		Token: stoken.NewJWTToken(
 			TokenExpire,
-			am,
-			Logger,
+			time.Now,
+			getPk(Logger),
 		),
 	})
 

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -98,3 +99,41 @@ func TestGetUserByID(t *testing.T) {
 		t.Error("user mismatch:", u1, u2)
 	}
 }
+
+func TestUpdate(t *testing.T) {
+	ctx := context.Background()
+	mc, err := mongo.Connect(
+		ctx,
+		options.Client().ApplyURI("mongodb://localhost:27017"),
+		options.Client().SetConnectTimeout(5*time.Second),
+	)
+	if err != nil {
+		t.Fatal("failed to connect to mongo:", err)
+	}
+	col := mc.Database("gservice").Collection("users")
+	// r, err := col.InsertOne(ctx, bson.M{
+	// 	"username": "update",
+	// 	"d1": bson.M{
+	// 		"d11": "d11",
+	// 	},
+	// 	"d2": bson.M{
+	// 		"d21": "d21",
+	// 	},
+	// })
+	// fmt.Println("insert result:", r, err)
+	// r, err := col.UpdateOne(ctx,
+	// 	bson.M{"username": "update"},
+	// 	bson.M{
+	// 		"$set": bson.M{
+	// 			"d1.d11": "d11 2 d111",
+	// 		}})
+	// fmt.Println("update result:", r, err)
+	r, err := col.UpdateOne(ctx,
+		bson.M{"username": "update"},
+		bson.M{
+			"$unset": bson.M{
+				"d1.d11": 1,
+			}})
+	fmt.Println("update result:", r, err)
+}
+
