@@ -1,7 +1,6 @@
 package sharetoken
 
 import (
-	"os"
 	"testing"
 
 	"github.com/dgrijalva/jwt-go"
@@ -26,7 +25,7 @@ func TestVerify(t *testing.T) {
 		panic(err)
 	}
 	verifier := &JWTTokenVerifier{
-		publicKey: pk,
+		PublicKey: pk,
 	}
 	token := "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA5OTUzMjAsImlhdCI6MTY0MDk5NTIwMCwiaXNzIjoiZ1NlcnZpY2UiLCJzdWIiOiJ1c2VyMUlEYXNkZiJ9.RVbvPcytgCOaP9YWdlpmtO-XupzK1T7QCjC4WGeWJMmSoRqincp-AO6N7ofjva8MvpWr-zL-TdqnxwP9YURmVtNak8i-awrL9QSgvATMhU9BKMmLb3srPXcTeda9d7mnaUpcr2Sp2tQjYmbVo1OukJv7rzxqHEKK3-GQ1YYMpEzzKjucQKqMxBtu_NJQXBGhnUlfhI1bwKdevHqgYfE_5pkEiCrz690mcGOcqZmnfovCfvjvbyZBE9FM4nEpyKBLeLpi0HjvGrmIsl6A71-Uu-qaJlKLkf1G5N6iS3mRvuNkP4uPPP2kdzDaxMgWcjmn1E9r-wsvN72RcL6_MDq6Kw"
 

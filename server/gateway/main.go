@@ -14,13 +14,17 @@ import (
 	authpb "gService/auth/api/gen/v1"
 	sharelog "gService/share/log"
 	sharetrace "gService/share/trace"
+	unionpb "gService/union/api/gen/v1"
 )
 
 // PORT is the getway port.
-const PORT string = ":9000"
+const PORT string = ":7000"
 
 // AuthPoint is the auth service address.
-const AuthPoint string = "localhost:9001"
+const AuthPoint string = "localhost:7001"
+
+// UnionPoint is the union service address.
+const UnionPoint string = "localhost:7002"
 
 // Logger is the global logger.
 var Logger *zap.Logger
@@ -60,17 +64,25 @@ func main() {
 		),
 		runtime.WithMetadata(requestIDAnnotator),
 	)
-	err := authpb.RegisterAuthServiceHandlerFromEndpoint(
+	var err error
+	err = authpb.RegisterAuthServiceHandlerFromEndpoint(
 		ctx, mux, AuthPoint,
 		[]grpc.DialOption{
 			grpc.WithInsecure(), // Ignore certificate errors
 			// grpc.WithChainUnaryInterceptor(),
 		},
 	)
+	err = unionpb.RegisterUnionServiceHandlerFromEndpoint(
+		ctx, mux, UnionPoint,
+		[]grpc.DialOption{
+			grpc.WithInsecure(),
+		},
+	)
+	if err != nil {
+		Logger.Sugar().Fatal("failed to register union service:", err)
+	}
 	if err != nil {
 		Logger.Sugar().Fatal("failed to register auth service:", err)
-	} else {
-		Logger.Sugar().Info("connected to auth service:", AuthPoint)
 	}
 	fmt.Println("gateway listening on", PORT)
 	Logger.Sugar().Fatal(http.ListenAndServe(PORT, tracingWrapper(mux)))

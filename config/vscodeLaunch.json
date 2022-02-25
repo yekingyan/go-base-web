@@ -2,6 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Gateway",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}/server/gateway/main.go"
+        },
+        {
             "name": "Auth",
             "type": "go",
             "request": "launch",
@@ -9,11 +16,11 @@
             "program": "${workspaceRoot}/server/auth/main.go"
         },
         {
-            "name": "Gateway",
+            "name": "Union",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceRoot}/server/gateway/main.go"
+            "program": "${workspaceRoot}/server/union/main.go"
         }
     ]
 }

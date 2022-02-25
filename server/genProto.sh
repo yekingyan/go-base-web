@@ -16,3 +16,4 @@ function genProto {
 }
 
 genProto auth
+genProto union

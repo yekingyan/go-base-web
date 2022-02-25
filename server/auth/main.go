@@ -22,7 +22,7 @@ import (
 )
 
 // PORT is the port to listen on.
-const PORT string = ":9001"
+const PORT string = ":7001"
 
 // MongoURL is the mongo url.
 const MongoURL string = "mongodb://localhost:27017"
@@ -37,7 +37,7 @@ var Logger *zap.Logger
 const TokenExpire int64 = 60 * 60 * 2
 
 // PrivateKeyPath is the path of private key.
-const PrivateKeyPath = "auth/private.key"
+const PrivateKeyPath = "private.key"
 
 func getPk(logger *zap.Logger) *rsa.PrivateKey {
 	pkFile, err := os.Open(PrivateKeyPath)

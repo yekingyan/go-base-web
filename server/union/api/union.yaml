@@ -1,0 +1,9 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: union.v1.UnionService.Ping
+      get: /v1/union/ping
+    - selector: union.v1.UnionService.GetUnionInfo
+      get: /v1/union/get_union_info

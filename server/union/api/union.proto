@@ -1,0 +1,17 @@
+syntax = "proto3";
+package union.v1;
+option go_package = "union/api/gen/v1;unionpb";
+
+message UnionRequest {
+    string id = 1;
+}
+
+message UnionResponse {
+    string id = 1;
+    string name = 2;
+}
+
+service UnionService {
+    rpc GetUnionInfo (UnionRequest) returns (UnionResponse);
+    rpc Ping(UnionRequest) returns (UnionResponse) {};
+}

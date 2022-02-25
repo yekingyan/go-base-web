@@ -2,7 +2,6 @@ package token
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -39,7 +38,6 @@ func (j *JWTToken) GenerateToken(userID string) (string, int64, error) {
 		Issuer:    "gService",
 		Subject:   userID,
 	})
-	fmt.Printf("jtk: %+v %+v", jtk.Header, jtk.Claims)
 	tk, err := jtk.SignedString(j.privateKey)
 	return tk, expire, err
 }

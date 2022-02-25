@@ -1,7 +1,7 @@
 syntax = "proto3";
 package auth.v1;
 // 生成package为authpb
-option go_package = "coolcar/auth/api/gen/v1;authpb";
+option go_package = "auth/api/gen/v1;authpb";
 
 message LoginRequest {
     string username = 1;

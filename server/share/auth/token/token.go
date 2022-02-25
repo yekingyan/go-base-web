@@ -9,12 +9,12 @@ import (
 
 // JWTTokenVerifier verify a jwt token
 type JWTTokenVerifier struct {
-	publicKey *rsa.PublicKey
+	PublicKey *rsa.PublicKey
 }
 
 func (j *JWTTokenVerifier) getKeyFunc() jwt.Keyfunc {
 	return func(t *jwt.Token) (interface{}, error) {
-		return j.publicKey, nil
+		return j.PublicKey, nil
 	}
 }
 
