@@ -75,6 +75,9 @@ func getTokenFromCtx(ctx context.Context) (string, error) {
 func (i *interceptor) VerifyRequst(ctx context.Context,
 	req interface{}, info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (resp interface{}, err error) {
+	if strings.HasSuffix(info.FullMethod, "/Ping") {
+		return handler(ctx, req)
+	}
 	tkn, err := getTokenFromCtx(ctx)
 	if err != nil {
 		return nil, err

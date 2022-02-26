@@ -20,14 +20,22 @@ import (
 // PORT is the getway port.
 const PORT string = ":7000"
 
-// AuthPoint is the auth service address.
-const AuthPoint string = "localhost:7001"
-
-// UnionPoint is the union service address.
-const UnionPoint string = "localhost:7002"
-
 // Logger is the global logger.
 var Logger *zap.Logger
+
+var serverConfig = map[string] struct {
+	addr     string
+	register func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error)
+}{
+	"auth": {
+		addr:     "localhost:7001",
+		register: authpb.RegisterAuthServiceHandlerFromEndpoint,
+	},
+	"union": {
+		addr:     "localhost:7002",
+		register: unionpb.RegisterUnionServiceHandlerFromEndpoint,
+	},
+}
 
 func tracingWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +44,7 @@ func tracingWrapper(h http.Handler) http.Handler {
 			requestID = sharetrace.NewRequestID()
 		}
 		r.Header.Set(sharetrace.XRequestIDKey, requestID)
-		Logger.Sugar().Info("request", zap.String("method", r.Method), zap.String("url", r.URL.String()), zap.String("request_id", requestID))
+		Logger.Info("request", zap.String("method", r.Method), zap.String("url", r.URL.String()), zap.String("request_id", requestID))
 		h.ServeHTTP(w, r)
 	})
 }
@@ -64,26 +72,15 @@ func main() {
 		),
 		runtime.WithMetadata(requestIDAnnotator),
 	)
-	var err error
-	err = authpb.RegisterAuthServiceHandlerFromEndpoint(
-		ctx, mux, AuthPoint,
-		[]grpc.DialOption{
-			grpc.WithInsecure(), // Ignore certificate errors
-			// grpc.WithChainUnaryInterceptor(),
-		},
-	)
-	err = unionpb.RegisterUnionServiceHandlerFromEndpoint(
-		ctx, mux, UnionPoint,
-		[]grpc.DialOption{
-			grpc.WithInsecure(),
-		},
-	)
-	if err != nil {
-		Logger.Sugar().Fatal("failed to register union service:", err)
+
+	for name, s := range serverConfig {
+		err := s.register(ctx, mux, s.addr, []grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			Logger.Fatal("failed to register service:", zap.String("name", name), zap.Error(err))
+		}
+		Logger.Info("registered service:", zap.String("name", name))
 	}
-	if err != nil {
-		Logger.Sugar().Fatal("failed to register auth service:", err)
-	}
+
 	fmt.Println("gateway listening on", PORT)
 	Logger.Sugar().Fatal(http.ListenAndServe(PORT, tracingWrapper(mux)))
 }
