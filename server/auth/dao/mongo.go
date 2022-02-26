@@ -7,10 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
+
+	"gService/share/id"
+	sharemongo "gService/share/mongo"
 )
 
 // AuthMongo is anth data access object.
@@ -39,11 +41,11 @@ func (f UserField) String() string {
 
 // UserRow is a row of user collection.
 type UserRow struct {
-	ID         string `bson:"_id"`
-	Username   string `bson:"username"`
-	Password   string `bson:"password"`
-	CreateTime int64  `bson:"create_time"`
-	UpdateTime int64  `bson:"update_time"`
+	ID         id.UserID `bson:"_id"`
+	Username   string    `bson:"username"`
+	Password   string    `bson:"password"`
+	CreateTime int64     `bson:"create_time"`
+	UpdateTime int64     `bson:"update_time"`
 }
 
 // SessionField is session collection field.
@@ -59,7 +61,7 @@ const (
 // SessionRow is a row of session collection.
 type SessionRow struct {
 	ID         string `bson:"_id"`
-	UserID     string `bson:"user_id"`
+	UserID     id.UserID `bson:"user_id"`
 	ExpireTime int64  `bson:"expire_time"`
 }
 
@@ -132,9 +134,9 @@ func (m *AuthMongo) GetUserByName(username string) (UserRow, error) {
 }
 
 // GetUserByID returns a user by id.
-func (m *AuthMongo) GetUserByID(id string) (UserRow, error) {
+func (m *AuthMongo) GetUserByID(oid id.UserID) (UserRow, error) {
 	c := context.Background()
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := sharemongo.ToObjID(oid)
 	if err != nil {
 		return UserRow{}, err
 	}
@@ -156,15 +158,15 @@ func (m *AuthMongo) GetUserByID(id string) (UserRow, error) {
 }
 
 // CreateSession insert a session to session collection.
-func (m *AuthMongo) CreateSession(userID string, expire int64) (SessionRow, error) {
+func (m *AuthMongo) CreateSession(userID id.UserID, expire int64) (SessionRow, error) {
 	ctx := context.Background()
 	ts := time.Now().Unix() + expire
 	m.sessionCol.DeleteOne(ctx, &bson.M{
-		UserID.String(): userID,
+		UserID.String(): userID.String(),
 	})
 	r, err := m.sessionCol.InsertOne(ctx, &bson.M{
 		SessionID.String():     uuid.New().String(),
-		UserID.String():        userID,
+		UserID.String():        userID.String(),
 		SessionExpire.String(): ts,
 	})
 	if err != nil {

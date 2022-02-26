@@ -2,6 +2,7 @@ package token
 
 import (
 	"gService/auth/dao"
+	"gService/share/id"
 
 	"go.uber.org/zap"
 )
@@ -23,7 +24,7 @@ func NewSessionToken(expire int64, mongo *dao.AuthMongo, logger *zap.Logger) *Se
 }
 
 // GenerateToken returns a session for userID
-func (s *SessionToken) GenerateToken(userID string) (string, int64, error) {
+func (s *SessionToken) GenerateToken(userID id.UserID) (string, int64, error) {
 	row, err := s.Mongo.CreateSession(userID, s.Expire)
 	return row.ID, row.ExpireTime, err
 }

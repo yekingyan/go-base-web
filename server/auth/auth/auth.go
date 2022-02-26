@@ -13,6 +13,7 @@ import (
 
 	authpb "gService/auth/api/gen/v1"
 	"gService/auth/dao"
+	"gService/share/id"
 	sharetrace "gService/share/trace"
 )
 
@@ -26,7 +27,7 @@ type Service struct {
 // TokenGenerator is a token interface.
 type TokenGenerator interface {
 	GetExpiresIn() int64
-	GenerateToken(userID string) (string, int64, error)
+	GenerateToken(userID id.UserID) (string, int64, error)
 }
 
 // HashPassword turns a plaintext password into a hash.
@@ -65,7 +66,7 @@ func (s *Service) Register(ctx context.Context, req *authpb.LoginRequest) (*auth
 
 	s.Logger.Info("Register success", zap.Any("row", row))
 	return &authpb.RegisterResponse{
-		UserId:   row.ID,
+		UserId:   row.ID.String(),
 		Username: row.Username,
 	}, nil
 }
@@ -89,7 +90,7 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.
 		AccessToken: sessionID,
 		ExpiresIn:   s.Token.GetExpiresIn(),
 		Expire:      expire,
-		UserId:      row.ID,
+		UserId:      row.ID.String(),
 		Username:    row.Username,
 	}, nil
 }

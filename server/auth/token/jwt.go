@@ -2,6 +2,7 @@ package token
 
 import (
 	"crypto/rsa"
+	"gService/share/id"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -29,14 +30,14 @@ func (j *JWTToken) GetExpiresIn() int64 {
 }
 
 // GenerateToken return a jwt token
-func (j *JWTToken) GenerateToken(userID string) (string, int64, error) {
+func (j *JWTToken) GenerateToken(userID id.UserID) (string, int64, error) {
 	now := j.nowFunc().Unix()
 	expire := now + j.expire
 	jtk := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.StandardClaims{
 		ExpiresAt: expire,
 		IssuedAt:  now,
 		Issuer:    "gService",
-		Subject:   userID,
+		Subject:   userID.String(),
 	})
 	tk, err := jtk.SignedString(j.privateKey)
 	return tk, expire, err
